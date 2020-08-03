@@ -46,7 +46,7 @@ The current version of MalleDB requires below prerequisites:
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-####Provided API:
+###Provided API:
 
 * init() -> Initialize the database with default configuration
 * init(Options options) -> Initialize the database with custom configuration
@@ -59,19 +59,21 @@ The current version of MalleDB requires below prerequisites:
 * update(String key, String value) -> updates the old value with the new one
 * delete(String key) -> deletes the item for given key
 
-####Configuration
+###Configuration
 
 The Options class is used to configure the database
-######Constructors:
+
+#####Constructors:
 * Options() -> default configuration
 * Options(DB_TYPE blockdb) -> using only one sub database
 * Options(DB_TYPE mdb, DB_TYPE bdb, DB_TYPE tdb) -> using different sub databases
-######Set Parameters:
+
+#####Set Parameters:
 * setMySQLCONF(String server, String user, String passw, String db, String[] tables)
 * setCassandraConf(String server, int port, String rep_strategy, int rep_factor, String keyspace, String[] tables)
 * setLevelDBConf(String db)
 
-####Example
+###Example
 
 Here is an example of MalleDB library usage:
 
