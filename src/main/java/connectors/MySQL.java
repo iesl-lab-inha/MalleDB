@@ -3,7 +3,7 @@ package connectors;
 import interfaces.SubDB;
 import util.Item;
 import util.Status;
-import util.Var;
+import util.Options;
 
 import java.io.ByteArrayInputStream;
 import java.sql.*;
@@ -22,9 +22,9 @@ public class MySQL extends SubDB {
     public Status init() {
         try{
             Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
-            conn = DriverManager.getConnection(Var.SERVER_MYSQL +
+            conn = DriverManager.getConnection(Options.SERVER_MYSQL +
                     "?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&user=" +
-                    Var.USER_MYSQL + "&password=" + Var.PASSW_MYSQL);
+                    Options.USER_MYSQL + "&password=" + Options.PASSW_MYSQL);
             //conn = DriverManager.getConnection("jdbc:mysql://localhost/?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&user=iesl&password=12345678");
             System.out.println("Successfully Connected to MYSQL Server...");
             return Status.OK;
@@ -46,7 +46,7 @@ public class MySQL extends SubDB {
         try{
             stmt = conn.createStatement();
 
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + Var.DB_MYSQL + "." + Var.TABLE_META_MYSQL + "(\n" +
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + Options.DB_MYSQL + "." + Options.TABLE_META_MYSQL + "(\n" +
                     "        id INT NOT NULL AUTO_INCREMENT,\n" +
                     "        d_key VARCHAR(100) NOT NULL,\n" +
                     "        m_count int NOT NULL,\n" +
@@ -54,35 +54,35 @@ public class MySQL extends SubDB {
                     "        t_count int NOT NULL,\n" +
                     "        PRIMARY KEY (ID)\n" +
                     "        );");
-            System.out.println("Successfully created table \"" + Var.TABLE_META_MYSQL + "\"...");
+            System.out.println("Successfully created table \"" + Options.TABLE_META_MYSQL + "\"...");
 
-            if(Var.SUB_DB == Var.DB_LIST.MYSQL){
-                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + Var.DB_MYSQL + "." + Var.TABLE_MDATA_MYSQL + "(\n" +
+            if(Options.SUB_DB == Options.DB_TYPE.MYSQL){
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + Options.DB_MYSQL + "." + Options.TABLE_MDATA_MYSQL + "(\n" +
                         "        id INT NOT NULL AUTO_INCREMENT,\n" +
                         "        d_order int NOT NULL,\n" +
                         "        d_key VARCHAR(100) NOT NULL,\n" +
                         "        d_value MEDIUMBLOB NOT NULL,\n" +
                         "        PRIMARY KEY (ID)\n" +
                         "        );");
-                System.out.println("Successfully created table \"" + Var.TABLE_MDATA_MYSQL + "\"...");
+                System.out.println("Successfully created table \"" + Options.TABLE_MDATA_MYSQL + "\"...");
 
-                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + Var.DB_MYSQL + "." + Var.TABLE_BDATA_MYSQL + "(\n" +
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + Options.DB_MYSQL + "." + Options.TABLE_BDATA_MYSQL + "(\n" +
                         "        id INT NOT NULL AUTO_INCREMENT,\n" +
                         "        d_order int NOT NULL,\n" +
                         "        d_key VARCHAR(100) NOT NULL,\n" +
                         "        d_value BLOB NOT NULL,\n" +
                         "        PRIMARY KEY (ID)\n" +
                         "        );");
-                System.out.println("Successfully created table \"" + Var.TABLE_BDATA_MYSQL + "\"...");
+                System.out.println("Successfully created table \"" + Options.TABLE_BDATA_MYSQL + "\"...");
 
-                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + Var.DB_MYSQL + "." + Var.TABLE_TDATA_MYSQL + "(\n" +
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + Options.DB_MYSQL + "." + Options.TABLE_TDATA_MYSQL + "(\n" +
                         "        id INT NOT NULL AUTO_INCREMENT,\n" +
                         "        d_order int NOT NULL,\n" +
                         "        d_key VARCHAR(100) NOT NULL,\n" +
                         "        d_value TINYBLOB NOT NULL,\n" +
                         "        PRIMARY KEY (ID)\n" +
                         "        );");
-                System.out.println("Successfully created table \"" + Var.TABLE_TDATA_MYSQL + "\"...");
+                System.out.println("Successfully created table \"" + Options.TABLE_TDATA_MYSQL + "\"...");
             }
             stmt.close();
             return Status.OK;
@@ -117,7 +117,7 @@ public class MySQL extends SubDB {
     public Status insert(Item item) {
         try {
             if (item.isMeta()) {
-                String query = "INSERT INTO " + Var.DB_MYSQL + "." + Var.TABLE_META_MYSQL + " (d_key, m_count, b_count, t_count) VALUES (?, ?, ?, ?)";
+                String query = "INSERT INTO " + Options.DB_MYSQL + "." + Options.TABLE_META_MYSQL + " (d_key, m_count, b_count, t_count) VALUES (?, ?, ?, ?)";
                 pstmt = conn.prepareStatement(query);
                 pstmt.setString(1, item.getKey());
                 pstmt.setInt(2, item.getCounters()[0]);
@@ -128,9 +128,9 @@ public class MySQL extends SubDB {
 
                 pstmt.close();
             } else {
-                String table = Var.TABLES_MYSQL[item.getType() - 1];
+                String table = Options.TABLES_MYSQL[item.getType() - 1];
 
-                String query = "INSERT INTO " + Var.DB_MYSQL + "." + table + " (d_order, d_key, d_value) VALUES (?, ?, ?)";
+                String query = "INSERT INTO " + Options.DB_MYSQL + "." + table + " (d_order, d_key, d_value) VALUES (?, ?, ?)";
                 pstmt = conn.prepareStatement(query);
                 pstmt.setInt(1, item.getOrder());
                 pstmt.setString(2, item.getKey());
@@ -153,7 +153,7 @@ public class MySQL extends SubDB {
     public Item readMeta(Item item) {
         try{
             String key = item.getKey();
-            String query = "SELECT * FROM " + Var.DB_MYSQL + "." + Var.TABLE_META_MYSQL + " WHERE d_key='" + key + "';";
+            String query = "SELECT * FROM " + Options.DB_MYSQL + "." + Options.TABLE_META_MYSQL + " WHERE d_key='" + key + "';";
             stmt = conn.createStatement();
             rs = stmt.executeQuery(query);
             if(rs.next()){
@@ -178,7 +178,7 @@ public class MySQL extends SubDB {
         try{
             List<Item> items = new ArrayList<>();
             String key = item.getKey();
-            String query = "SELECT * FROM " + Var.DB_MYSQL + "." + table + " WHERE d_key='" + key + "';";
+            String query = "SELECT * FROM " + Options.DB_MYSQL + "." + table + " WHERE d_key='" + key + "';";
             stmt = conn.createStatement();
             rs = stmt.executeQuery(query);
             while(rs.next()){
@@ -203,7 +203,7 @@ public class MySQL extends SubDB {
     public Status delete(String table, Item item) {
         try {
             stmt = conn.createStatement();
-            String query = "DELETE FROM " + Var.DB_MYSQL + "." + table + " WHERE d_key='" + item.getKey() + "';";
+            String query = "DELETE FROM " + Options.DB_MYSQL + "." + table + " WHERE d_key='" + item.getKey() + "';";
             System.out.println("Query: " +  query);
             stmt.executeUpdate(query);
             System.out.println("Item for key \"" + item.getKey() + "\" deleted...");

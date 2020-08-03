@@ -7,10 +7,8 @@ import interfaces.SubDB;
 import util.Item;
 import util.Options;
 import util.Status;
-import util.Var;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class MalleDB implements interfaces.MalleDB {
@@ -59,11 +57,13 @@ public class MalleDB implements interfaces.MalleDB {
 
     }
 
+    //Initialize with default configuration
     @Override
     public Status init() {
         return init(new Options(true));
     }
 
+    //Initialize with custom configuration
     @Override
     public Status init(Options options) {
         metadb = new MySQL();
@@ -71,9 +71,9 @@ public class MalleDB implements interfaces.MalleDB {
 
         if(options.isUsingDefault()) {
             usingOneSubDB = true;
-            if (Var.SUB_DB == Var.DB_LIST.MYSQL) {
+            if (Options.SUB_DB == Options.DB_TYPE.MYSQL) {
                 blockdb = new MySQL();
-            } else if (Var.SUB_DB == Var.DB_LIST.LEVELDB) {
+            } else if (Options.SUB_DB == Options.DB_TYPE.LEVELDB) {
                 blockdb = new LevelDB();
             } else {
                 blockdb = new Cassandra();
@@ -117,6 +117,7 @@ public class MalleDB implements interfaces.MalleDB {
         return Status.OK;
     }
 
+    //Create databses and tables
     @Override
     public Status create() {
         metadb.create();
@@ -130,6 +131,7 @@ public class MalleDB implements interfaces.MalleDB {
         return Status.OK;
     }
 
+    //Close the connection
     @Override
     public Status close() {
         metadb.close();
@@ -143,62 +145,63 @@ public class MalleDB implements interfaces.MalleDB {
         return null;
     }
 
+    //Insert data
     @Override
     public Status insert(String key, String value) {
-        //System.out.println("Value: " + value);
-        String v = value;
+
+        //Initialize the variables starts
         String chunk;
         int order;
         Item meta;
-        ArrayList<Item>[] blocks = new ArrayList[Var.bCOUNTER];
-        for(int i = 0; i < Var.bCOUNTER; i++){
+        ArrayList<Item>[] blocks = new ArrayList[Options.bCOUNTER];
+        for(int i = 0; i < Options.bCOUNTER; i++){
             blocks[i] =  new ArrayList<>();
         }
-       // System.out.println("Check 0");
+        int[] counters = new int[Options.bCOUNTER];
+        //Initialize the variables ends
 
-        int[] counters = new int[Var.bCOUNTER];
-       // System.out.println("0");
-        for (int i = 0; i < Var.bCOUNTER; i++){
-            //System.out.println("1");
-
-            if(v.length() < Var.BLOCKS[i] && i != Var.bCOUNTER - 1) {
-                //System.out.println("2");
+        //Memtable managements part starts
+        for (int i = 0; i < Options.bCOUNTER; i++){
+            //check if the value size smaller than the block but the block is not tiny
+            if(value.length() < Options.BLOCKS[i] && i != Options.bCOUNTER - 1) {
                 continue;
             }
+            //Initialize the order to 0
             order = 0;
-            while (!v.equals("")) {
-                //System.out.println("3");
+            //Repeat while the value size is not 0
+            while (!value.equals("")) {
                 order++;
-                if (i == Var.bCOUNTER - 1 && v.length() <= Var.BLOCKS[i]) {
-                    //System.out.println("4");
-                    //System.out.println("if");
-                    chunk = v;
-                    v = "";
-                } else {
-                    //System.out.println("5");
-                    //System.out.println("else");
-                    if (v.length() < Var.BLOCKS[i]){
+                //Check if the block is tiny and value size is smaller
+                if (i == Options.bCOUNTER - 1 && value.length() <= Options.BLOCKS[i]) {
+                    chunk = value;
+                    value = "";
+                } else { //Otherwise
+                    //Break the while if the value size is smaller
+                    if (value.length() < Options.BLOCKS[i]){
                         order--;
                         break;
                     }
-                    //System.out.println("6");
-                    chunk = v.substring(0, Var.BLOCKS[i]);
-                    v = v.substring(Var.BLOCKS[i]);
-                    //System.out.println("7");
+                    //Initialize the chunk as the block size
+                    chunk = value.substring(0, Options.BLOCKS[i]);
+                    //Update the value
+                    value = value.substring(Options.BLOCKS[i]);
                 }
-                //System.out.println("8");
+                //Add new block to Memtable
                 blocks[i].add(new Item(order, i + 1, key, chunk));
             }
-
+            //Update metadata counter
             counters[i] = order;
         }
+        //Memtable managements part ends
+
+        //Database part starts
+        //Initialize and insert metadata
         meta = new Item(key, counters);
-        //System.out.println("Check 1");
         metadb.insert(meta);
 
+        //Insert to databases
         if(usingOneSubDB) {
-            //System.out.println("Check 2");
-            for (int i = 0; i < Var.bCOUNTER; i++) {
+            for (int i = 0; i < Options.bCOUNTER; i++) {
                 for (int j = 0; j < blocks[i].size(); j++)
                     blockdb.insert(blocks[i].get(j));
             }
@@ -213,7 +216,7 @@ public class MalleDB implements interfaces.MalleDB {
                 tdb.insert(blocks[2].get(i));
             }
         }
-        //System.out.println("Check 3");
+        //Database part ends
 
         return Status.OK;
     }
@@ -224,8 +227,8 @@ public class MalleDB implements interfaces.MalleDB {
         String chunk;
         int order;
         List<Item> metaList = new ArrayList<>();
-        ArrayList<Item>[] blocks = new ArrayList[Var.bCOUNTER];
-        int[] counters = new int[Var.bCOUNTER];
+        ArrayList<Item>[] blocks = new ArrayList[Options.bCOUNTER];
+        int[] counters = new int[Options.bCOUNTER];
 
         for(int n = 0; n < values.size(); n++) {
             //TODO: implement
@@ -234,7 +237,7 @@ public class MalleDB implements interfaces.MalleDB {
         for(int i = 0; i < metaList.size(); i++){
             metadb.insert(metaList.get(i));
         }
-        for(int i = 0; i < Var.bCOUNTER; i++){
+        for(int i = 0; i < Options.bCOUNTER; i++){
             for (int j = 0; j < blocks[i].size(); j++)
                 blockdb.insert(blocks[i].get(j));
         }
@@ -243,31 +246,33 @@ public class MalleDB implements interfaces.MalleDB {
 
     @Override
     public Status read(String key) {
-
+        //Initialize the Item
         Item item = new Item();
         item.setKey(key);
         item = metadb.readMeta(item);
         StringBuilder sb = new StringBuilder();
 
+        //Read each block from the sub database
         if(usingOneSubDB) {
-            for (int i = 0; i < Var.bCOUNTER; i++) {
-                List<Item> blocks = blockdb.readAll(Var.TABLES_MYSQL[i], item);
+            for (int i = 0; i < Options.bCOUNTER; i++) {
+                List<Item> blocks = blockdb.readAll(Options.TABLES_MYSQL[i], item);
                 for (Item block : blocks) {
+                    //Append with the value
                     sb.append(block.getValue());
                 }
             }
         }else{
-            List<Item> mblocks = mdb.readAll(Var.TABLES_MYSQL[0], item);
+            List<Item> mblocks = mdb.readAll(Options.TABLES_MYSQL[0], item);
             for (Item block : mblocks) {
                 sb.append(block.getValue());
             }
 
-            List<Item> bblocks = bdb.readAll(Var.TABLES_MYSQL[1], item);
+            List<Item> bblocks = bdb.readAll(Options.TABLES_MYSQL[1], item);
             for (Item block : bblocks) {
                 sb.append(block.getValue());
             }
 
-            List<Item> tblocks = tdb.readAll(Var.TABLES_MYSQL[2], item);
+            List<Item> tblocks = tdb.readAll(Options.TABLES_MYSQL[2], item);
             for (Item block : tblocks) {
                 sb.append(block.getValue());
             }
@@ -278,10 +283,6 @@ public class MalleDB implements interfaces.MalleDB {
 
     @Override
     public Status update(String key, String value) {
-        //Item item = new Item();
-        //item.setKey(key);
-        //item.setValue(value);
-
         delete(key);
         return insert(key, value);
     }
@@ -293,25 +294,24 @@ public class MalleDB implements interfaces.MalleDB {
         item = metadb.readMeta(item);
 
         if(usingOneSubDB) {
-            for (int i = 0; i < Var.bCOUNTER; i++) {
+            for (int i = 0; i < Options.bCOUNTER; i++) {
                 if (item.getCounters()[i] > 0) {
-                    //System.out.println("i = " + i + " Block: " + item.getCounters()[i]);
-                    blockdb.delete(Var.TABLES_MYSQL[i], item);
+                    blockdb.delete(Options.TABLES_MYSQL[i], item);
                     System.out.println("Block deleted...");
                 }
             }
         }else {
             if(item.getCounters()[0] > 0){
-                mdb.delete(Var.TABLES_MYSQL[0], item);
+                mdb.delete(Options.TABLES_MYSQL[0], item);
             }
             if(item.getCounters()[1] > 0){
-                bdb.delete(Var.TABLES_MYSQL[1], item);
+                bdb.delete(Options.TABLES_MYSQL[1], item);
             }
             if(item.getCounters()[2] > 0){
-                tdb.delete(Var.TABLES_MYSQL[2], item);
+                tdb.delete(Options.TABLES_MYSQL[2], item);
             }
         }
-        metadb.delete(Var.TABLE_META_MYSQL, item);
+        metadb.delete(Options.TABLE_META_MYSQL, item);
         System.out.println("Meta deleted...");
         return Status.OK;
     }
@@ -330,7 +330,7 @@ public class MalleDB implements interfaces.MalleDB {
         for (int i = 0; i < n; i++) {
 
             // generate a random number between
-            // 0 to AlphaNumericString variable length
+            // 0 to AlphaNumericString Optionsiable length
             int index
                     = (int)(AlphaNumericString.length()
                     * Math.random());

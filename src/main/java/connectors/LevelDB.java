@@ -6,12 +6,10 @@ import org.iq80.leveldb.Options;
 import static org.fusesource.leveldbjni.JniDBFactory.*;
 import util.Item;
 import util.Status;
-import util.Var;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class LevelDB extends SubDB {
@@ -24,7 +22,7 @@ public class LevelDB extends SubDB {
         try {
             options = new Options();
             options.createIfMissing(true);
-            db = factory.open(new File(Var.DB_LEVELDB), options);
+            db = factory.open(new File(util.Options.DB_LEVELDB), options);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -46,7 +44,7 @@ public class LevelDB extends SubDB {
 
     @Override
     public Status insert(Item item) {
-        String key = item.getType() + Var.DELIM + item.getOrder() + Var.DELIM + item.getKey();
+        String key = item.getType() + util.Options.DELIM + item.getOrder() + util.Options.DELIM + item.getKey();
         String value = item.getValue();
         System.out.println("Inserting: Key: " + key + " Value: " + value);
         db.put(key.getBytes(), value.getBytes());
@@ -58,14 +56,14 @@ public class LevelDB extends SubDB {
     public List<Item> readAll(String table, Item item) {
         List<Item> items = new ArrayList<>();
         int index = 0;
-        for(int i = 0; i < Var.bCOUNTER; i++){
-            if(table.equals(Var.TABLES_MYSQL[i])){
+        for(int i = 0; i < util.Options.bCOUNTER; i++){
+            if(table.equals(util.Options.TABLES_MYSQL[i])){
                 index = i;
             }
         }
 
         for(int i = 1; i <= item.getCounters()[index]; i++) {
-            String key = (index + 1) + Var.DELIM + i + Var.DELIM + item.getKey();
+            String key = (index + 1) + util.Options.DELIM + i + util.Options.DELIM + item.getKey();
             System.out.println("Reading: Key: " + key);
             byte[] value = db.get(key.getBytes());
 
