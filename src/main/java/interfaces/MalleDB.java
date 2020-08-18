@@ -12,7 +12,7 @@ public interface MalleDB {
     Status close();
 
     Status insert(String key, String value);
-    Status insert(List<String> keys, List<String> values);
+    //Status insert(List<String> keys, List<String> values);
     Status read(String key);
     Status update(String key, String value);
     Status delete(String key);

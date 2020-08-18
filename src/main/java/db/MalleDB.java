@@ -19,7 +19,7 @@ public class MalleDB implements interfaces.MalleDB {
     private SubDB bdb;
     private SubDB tdb;
     private boolean usingOneSubDB = false;
-
+/*
     public static void main(String[] args) {
 
        // String key = generateRandomString(20);
@@ -56,11 +56,11 @@ public class MalleDB implements interfaces.MalleDB {
         malleDB.close();
 
     }
-
+*/
     //Initialize with default configuration
     @Override
     public Status init() {
-        return init(new Options(true));
+        return init(new Options());
     }
 
     //Initialize with custom configuration
@@ -221,6 +221,7 @@ public class MalleDB implements interfaces.MalleDB {
         return Status.OK;
     }
 
+    /*
     @Override
     public Status insert(List<String> keys, List<String> values) {
 
@@ -243,6 +244,7 @@ public class MalleDB implements interfaces.MalleDB {
         }
         return Status.OK;
     }
+*/
 
     @Override
     public Status read(String key) {

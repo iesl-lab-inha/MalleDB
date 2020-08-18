@@ -8,9 +8,9 @@ public class Options {
     public static final String DELIM = ":";
 
     //MYSQL Configurations starts
-    public static final String SERVER_MYSQL = "jdbc:mysql://localhost/";
-    public static final String USER_MYSQL = "iesl";
-    public static final String PASSW_MYSQL = "12345678";
+    public static String SERVER_MYSQL = "jdbc:mysql://localhost/";
+    public static String USER_MYSQL = "iesl";
+    public static String PASSW_MYSQL = "12345678";
     public static final String DB_MYSQL = "malledb";
     public static final String TABLE_META_MYSQL = "metatable";
     public static final String TABLE_MDATA_MYSQL = "mdatatable";
@@ -22,16 +22,16 @@ public class Options {
     //MYSQL Configurations ends
 
     //LevelDB Configurations starts
-    public static final String DB_LEVELDB = "leveldb";
+    public static String DB_LEVELDB = "leveldb";
     //LevelDB Configurations starts
 
 
 
     //Cassandra Configurations starts
-    public static final String IP_CASS = "127.0.0.1";
-    public static final int PORT_CASS = 0;
-    public static final String REP_STRATEGY_CASS = "SimpleStrategy";
-    public static final int REP_FACTOR_CASS = 3;
+    public static String IP_CASS = "127.0.0.1";
+    public static int PORT_CASS = 0;
+    public static String REP_STRATEGY_CASS = "SimpleStrategy";
+    public static int REP_FACTOR_CASS = 3;
     public static final String KEYSPACE_CASS = "malledb";
     public static final String[] TABLES_CASS = {"mdatatable", "bdatatable", "tdatatable"};
     //Cassandra Configurations ends
@@ -51,28 +51,33 @@ public class Options {
         this.dbTiny = dbTiny;
     }
 
-    public Options(boolean usingDefault) {
-        this.usingDefault = usingDefault;
+    public Options(DB_TYPE subDB) {
+        this.usingDefault = true;
+        SUB_DB = subDB;
+        this.dbMedium = null;
+        this.dbBlob = null;
+        this.dbTiny = null;
     }
 
     public Options() {
-        this.usingDefault = false;
+        this.usingDefault = true;
     }
 
-    public void setUsingDefault(boolean usingDefault) {
-        this.usingDefault = usingDefault;
+    public void setMySQLConf(String server, String user, String password){
+        SERVER_MYSQL = server;
+        USER_MYSQL = user;
+        PASSW_MYSQL = password;
     }
 
-    public void setDbMedium(DB_TYPE dbMedium) {
-        this.dbMedium = dbMedium;
+    public void setLevelDBConf(String db){
+        DB_LEVELDB = db;
     }
 
-    public void setDbBlob(DB_TYPE dbBlob) {
-        this.dbBlob = dbBlob;
-    }
-
-    public void setDbTiny(DB_TYPE dbTiny) {
-        this.dbTiny = dbTiny;
+    public void setCassandraDBConf(String server, int port, String repStrategy, int repFactor){
+        IP_CASS = server;
+        PORT_CASS = port;
+        REP_STRATEGY_CASS = repStrategy;
+        REP_FACTOR_CASS = repFactor;
     }
 
     public boolean isUsingDefault() {
